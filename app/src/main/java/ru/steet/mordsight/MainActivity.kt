@@ -5,6 +5,7 @@ import android.content.Intent
 import android.content.pm.LauncherApps
 import android.net.Uri
 import android.os.Bundle
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -145,6 +146,7 @@ fun App() {
     val viewModel: SightsViewModel = viewModel()
 
     val query by viewModel.query.collectAsState()
+    var recompose by remember { mutableStateOf("") }
 
     LaunchedEffect(Unit) {
         withContext(Dispatchers.IO) {
@@ -152,15 +154,16 @@ fun App() {
             if (!file.exists()) {
                 file.createNewFile()
             }
-            file.writeText("""
-                []
-            """.trimIndent())
+            file.writeText(srcsOFff)
             viewModel.loadSights(file)
+            Log.d("TAGGGGGGG", "PPPP")
+            recompose += "1"
         }
     }
 
     if (!viewModel.isSightsLoaded()) {
         CircularProgressIndicator(Modifier.fillMaxSize())
+        Text(recompose)
     } else {
         Scaffold(
             modifier = Modifier.fillMaxSize(),
@@ -200,9 +203,9 @@ fun App() {
                     navigationIcon = {
                         Box(modifier = Modifier.size(64.dp), contentAlignment = Alignment.Center) {
                             if (currentBackStackEntry != null && navController.currentDestination?.route !in destinations.map { it.id }) {
-                                Icon(Icons.AutoMirrored.Filled.ArrowBack, null, modifier = Modifier.scale(1.5f).clickable { navController.popBackStack() })
+                                Icon(Icons.AutoMirrored.Filled.ArrowBack, null, modifier = Modifier.scale(1.5f).clickable { navController.popBackStack();currentSight=null })
                             } else {
-                                val res = painterResource(R.drawable.ic_launcher_foreground)
+                                val res = painterResource(R.drawable.icon)
                                 Icon(res, null)
                             }
                         }
@@ -268,8 +271,9 @@ fun AllSightsScreen(
     setCurrentSight: (SightModel) -> Unit
 ) {
     val sights by viewModel.filteredSights.collectAsState()
+    val allllSights by viewModel.allSights.collectAsState()
     LazyColumn {
-        itemsIndexed(sights) { idx, item ->
+        itemsIndexed(if(sights.isEmpty()) allllSights else sights) { idx, item ->
             SightPreviewCard(item.name, item.brief, item.images) { setCurrentSight(item) }
         }
     }
@@ -411,7 +415,7 @@ class SightsViewModel : ViewModel() {
 
     fun getDailySight(): SightModel {
         val date = Date()
-        val fac = date.day.floorDiv(_allSights.value.size)
+        val fac = date.day.floorDiv(_allSights.value.size+1)+1
         val sightOfTheDay = _allSights.value[date.day.floorDiv(fac)]
         return sightOfTheDay
     }
@@ -545,3 +549,65 @@ fun SightDetails(sightModel: SightModel, navController: NavController) {
         }
     }
 }
+
+val srcsOFff = """
+[
+	{
+		"id": "Музей боевого и трудового подвига в Саранске",
+		"name": "Музей боевого и трудового подвига в Саранске",
+		"images": ["https://avatars.mds.yandex.net/i?id=e76362d049256db79fbea8cc9a8d3285666fa62a-13013698-images-thumbs&n=13", "https://avatars.mds.yandex.net/i?id=02792cd6ddb9e434b0b1cc9de7bb845d1b726cc9-3481141-images-thumbs&n=13", "https://avatars.mds.yandex.net/i?id=8f1e9f860de3d1e406786ab4110e48fedbee5d39-3492565-images-thumbs&n=13", "https://avatars.mds.yandex.net/i?id=81fb642f43ddb26e4f299f6d61561e683eb6add4-5232252-images-thumbs&n=13"],
+		"brief": "Музей на площади Победы в Мордовии.",
+		"description": "Музей входит в состав мемориального комплекса на площади Победы и основан в 1995-м году. Здание выглядит достаточно оригинально: в плане оно очертаниями напоминает республику Мордовию на карте, а стены выложены из черно-оранжевой плитки, навевая ассоциации с Георгиевской лентой. Музейные фонды хранят свыше 40 тыс. предметов. Экспозиция включает военные реликвии и награды, форму, оружие, личные письма, вещи и фотографии солдат. Также в нее входят предметы искусства на военную тематику. Действует выставка образцов военной техники, в том числе танк Т-34 и зенитная пушка М-1. ",
+		"links": [{"icon":"Info","label":":","action":"https://saransk.kassir.ru/muzei/mbuk-memorialnyiy-muzey-v-i-tp-1941-1945gg"}]
+	},
+	{
+		"id": "Дом-музей «Этно-кудо» имени В. И. Ромашкина",
+		"name": "Дом-музей «Этно-кудо» имени В. И. Ромашкина",
+		"images": ["https://avatars.mds.yandex.net/i?id=8a2355017a2076ef6b0b205b1d946a0668a6e5f7-9028838-images-thumbs&n=13","https://avatars.mds.yandex.net/i?id=db83ac4c60e67955ef2348e1b24ee2407bfb9cc029d8ea03-12541995-images-thumbs&n=13", "https://avatars.mds.yandex.net/i?id=ee2161090ec1c04ff77e0fec8156700d15f02698-10471642-images-thumbs&n=13", "https://avatars.mds.yandex.net/i?id=6044358481293a7800e1aee323063b72d27cf405-9152791-images-thumbs&n=13"],
+		"brief": "Музей в селе Подлесная Тавла.",
+		"description": "Открыт в 2006 году в селе Подлесная Тавла. Посвящён фольклористу Ромашкину и его многолетнему труду. Часть комнат отведено под личные вещи исследователя, также являвшегося основателем фолк-коллектива «Торама», а часть – под этно-коллекцию. Музей принимает ежегодный фестиваль, где исполняют песни местных народностей. С экспозицией можно ознакомиться круглый год, за исключением выходных дней – понедельников."
+		"links": [{"icon":"Info","label":":","action":"https://yandex.ru/maps/org/etno_kudo/1737083537/?ll=45.487282%2C54.098024&z=16"}]
+	},
+	{
+		"id": "Национальный парк «Смольный»",
+		"name": "Национальный парк «Смольный»",
+		"images": ["https://avatars.mds.yandex.net/i?id=b6492aa25ee29480b274bd3e03822cb01a8dd0970ee952bd-11920176-images-thumbs&n=13", "https://avatars.mds.yandex.net/i?id=ff16305878225593ef6b042ed7545328f452911c-5235366-images-thumbs&n=13", "https://avatars.mds.yandex.net/i?id=7e0820e1fcaf9d5f33d448870c1044cd430be18f-5277129-images-thumbs&n=13", "https://avatars.mds.yandex.net/i?id=833466710666e0b1ab29de86bd07c69b8842f9bb-13094487-images-thumbs&n=13"],
+		"brief": "Национальный парк.",
+		"description": "Основан в 1995 году и занимает площадь в 35,5 тысяч га по левому берегу реки Алатырь. В лесном массиве и на пойме гнездятся редкие птицы, эта территория относится к особо значимой для орнитологов мира. Леса здесь как смешанные, так и сосновые, а также лиственные. Луга по большей части пойменные. Национальный парк несёт просветительскую функцию, поэтому тут проложены экомаршруты и проводятся экскурсии.",
+		"links": [{"icon":"Info","label":":","action":"https://zapoved-mordovia.ru/ru/online-payment.html?ysclid=m3rdw3w5sx999704013"}]
+	},
+	{
+		"id": "Пайгармский Параскево-Вознесенский монастырь",
+		"name": "Пайгармский Параскево-Вознесенский монастырь",
+		"images": ["https://avatars.mds.yandex.net/i?id=a85f8501f9df170192a358cdd884429a9c58bfb8-12421995-images-thumbs&n=13", "https://avatars.mds.yandex.net/i?id=c398965c74017b3091575f67630a013afcdb46507e23e49c-12941205-images-thumbs&n=13"],
+		"brief": "Обитель в селе Пайгарма.",
+		"description": "Обитель представляет собой архитектурный памятник XVIII в., расположенный в селе Пайгарма. Женский монастырь основан на месте, где, как считается, произошло чудо – явление иконы мученицы Параскевы. Икона была написана в XIX в. и по сей день хранится в обители, составляя одну из главных ее святынь. Считается также, что она покровительствует торговцам. На территории монастыря есть родники со святой целебной водой. Сюда приходят для лечения проблем со зрением, а также бесплодия. Святая обитель находится в красивой местности, в окружении лесов и озер. ",
+		"links": [{"icon":"Info","label":":","action":"https://gulfstream64.ru/pajgarma-makarovka-ekskursiya-po-monastyryam-mordovii/?ysclid=m3re005xhw271857768"}]
+	},
+	{
+		"id": "Церковь Николая Чудотворца",
+		"name": "Церковь Николая Чудотворца",
+		"images": ["https://avatars.mds.yandex.net/i?id=89a3581eeeb9bfabc9837c505c61ec66bfc031be-13529499-images-thumbs&n=13", "https://avatars.mds.yandex.net/i?id=4f7770a32dbe3e9f3497983a08c84dbc93cd8671-11409613-images-thumbs&n=13"],
+		"brief": "Каменная церковь Николая Чудотворца в Посопе",
+		"description": "Каменная церковь Николая Чудотворца в Посопе построена в 1897-1906 году вместо каменного здания XVIII века. Первоначально главный престол Петропавловский, придел Никольский. Церковь закрыта в 1937 году. Здание храма использовалась под склад, отдел культуры, музей. Никольская церковь возвращена верующим в 1990 году.",
+		"links": [{"icon":"Info","label":":","action":"https://yandex.ru/maps/org/tserkov_nikolaya_chudotvortsa/1297805069/?ll=45.224722%2C54.185720&z=16"}]
+	},
+	{
+		"id": "Мордовский государственный природный заповедник им. П.Г. Смидовича",
+		"name": "Заповедник",
+		"images": ["https://avatars.mds.yandex.net/i?id=085b7ede509fa64c3b75a18b06c7d71b7ff3ff14-12529607-images-thumbs&n=13", "https://avatars.mds.yandex.net/i?id=4d75e738616dc81a22a5030eb47332f1-4054908-images-thumbs&n=13"],
+		"brief": "...",
+		"description": "В этом заповеднике можно увидеть сочетание различных географических зон (таежных и широколиственных лесов и лесостепи), в которых расположен заповедник, обуславливает многообразие животного и растительного мира. Множество редких растений, грибов и животных встречается в Мордовском заповеднике, в том числе орхидеи венерин башмачок настоящий, неоттианта клобучковая, редчайшие лишайники лобария легочная и менегация пробуравленная, гриб-баран, красивейшая бабочка аполлон, симпатичные перепончатокрылые пчела-плотник и парнопес, могучие хищные птицы орлан-белохвост, большой подорлик, грациозный черный аист, реликтовое животное русская выхухоль и другие виды, занесенные в Красную книгу Российской Федерации. Леса Мордовского заповедника являются убежищем копытных и хищных животных — лося, оленя, кабана, куницы, рыси, бурого медведя, волка, лисицы.",
+		"links": [{"icon":"Info","label":":","action":"https://turizmrm.ru/what-to-visit/nature/natural-objects/nature-reserve-named-smidovich"}]
+	},
+	{
+		"id": "Дом-музей Ф. В. Сычкова",
+		"name": "Дом-музей Ф. В. Сычкова",
+		"images": ["https://avatars.mds.yandex.net/i?id=7b18d5be1390bb85430f60b446bf2253b5fcc96bd79cd015-11406357-images-thumbs&n=13", "https://avatars.mds.yandex.net/i?id=f9da6bc82b26073c56b2bfa03bd33d92d6533165-11467820-images-thumbs&n=13"],
+		"brief": "Музей искусств",
+		"description": "Располагается в селе Кочелаево с 1970 года. Экспозиция состоит из личных вещей художника, атрибутов и убранства, свойственных домам того времени, а также из работ мастера. Все комнаты восстанавливались по воспоминаниям супруги Сычкова, некоторые предметы обихода предоставлены его семьёй. Отдельной коллекцией идут награды, полученные Фёдором Васильевичем, в том числе за период войны.",
+		"links": [{"icon":"Info","label":":","action":"https://saransk.kassir.ru/muzey/dom-muzey-f-v-syichkova"}]
+	}
+
+]
+""".trimIndent()
