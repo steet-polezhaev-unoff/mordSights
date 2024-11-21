@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">mordSights</string>
+    <string name="home_page_navbar_button">Главная</string>
+    <string name="all_sights_page_navbar_button">Все места</string>
+    <string name="sight_of_the_day">Место дня</string>
+    <string name="sight_of_the_day_placeholder_pls_remove_it">Красивое место, где-то в Мордовии</string>
+    <string name="app_tittle">mordSights</string>
+</resources>
